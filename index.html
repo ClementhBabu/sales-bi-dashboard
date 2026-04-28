@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sales BI Dashboard 2024–2025</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --surface:  #181c27;
+      --card:     #1e2235;
+      --border:   rgba(255,255,255,0.07);
+      --text:     #e8eaf0;
+      --muted:    #7b8299;
+      --accent:   #3d7ef7;
+      --green:    #1dba8a;
+      --purple:   #8b7cf8;
+      --amber:    #f5a623;
+      --red:      #ef4c5a;
+      --pink:     #d4537e;
+      --font:     'Inter', system-ui, sans-serif;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* ── TOP NAV ── */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .nav-logo span {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+    }
+    .nav-pills { display: flex; gap: 4px; }
+    .nav-pill {
+      font-size: 12px; padding: 5px 14px;
+      border-radius: 20px; border: none; background: transparent;
+      color: var(--muted); cursor: pointer; transition: all .2s;
+    }
+    .nav-pill.active, .nav-pill:hover { background: var(--card); color: var(--text); }
+    .nav-badge {
+      font-size: 11px; padding: 3px 10px; border-radius: 20px;
+      background: rgba(29,186,138,.15); color: var(--green);
+      border: 1px solid rgba(29,186,138,.3); font-weight: 500;
+    }
+
+    /* ── LAYOUT ── */
+    .wrapper { max-width: 1400px; margin: 0 auto; padding: 2rem 2rem 4rem; }
+
+    /* ── HEADER ── */
+    .header { margin-bottom: 2rem; }
+    .header h1 {
+      font-size: 28px; font-weight: 700;
+      background: linear-gradient(90deg, #e8eaf0, #8b7cf8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+    .header-meta {
+      display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+    }
+    .meta-chip {
+      font-size: 11px; padding: 3px 10px; border-radius: 20px;
+      border: 1px solid var(--border); color: var(--muted);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .meta-chip .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ── KPI GRID ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 1.5rem;
+    }
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s, border-color .2s;
+    }
+    .kpi-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.14); }
+    .kpi-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      border-radius: 14px 14px 0 0;
+    }
+    .kpi-card.blue::before  { background: linear-gradient(90deg, var(--accent), transparent); }
+    .kpi-card.green::before { background: linear-gradient(90deg, var(--green), transparent); }
+    .kpi-card.purple::before{ background: linear-gradient(90deg, var(--purple), transparent); }
+    .kpi-card.amber::before { background: linear-gradient(90deg, var(--amber), transparent); }
+    .kpi-label {
+      font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+      color: var(--muted); margin-bottom: 10px; font-weight: 500;
+    }
+    .kpi-value { font-size: 32px; font-weight: 700; color: var(--text); line-height: 1; }
+    .kpi-delta { font-size: 12px; margin-top: 8px; }
+    .kpi-delta.up   { color: var(--green); }
+    .kpi-delta.down { color: var(--red); }
+    .kpi-icon {
+      position: absolute; top: 18px; right: 18px;
+      width: 34px; height: 34px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    /* ── GRID ROWS ── */
+    .grid-2 { display: grid; grid-template-columns: 2fr 1.1fr; gap: 14px; margin-bottom: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .grid-2b{ display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; margin-bottom: 14px; }
+    @media(max-width: 900px) {
+      .grid-2,.grid-3,.grid-2b { grid-template-columns: 1fr; }
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 24px;
+      transition: border-color .2s;
+    }
+    .card:hover { border-color: rgba(255,255,255,.12); }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 18px;
+    }
+    .card-title {
+      font-size: 13px; font-weight: 600; color: var(--text);
+    }
+    .card-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .card-tag {
+      font-size: 10px; padding: 3px 9px; border-radius: 10px;
+      background: rgba(61,126,247,.12); color: var(--accent); border: 1px solid rgba(61,126,247,.2);
+      white-space: nowrap;
+    }
+
+    /* ── LEGEND ── */
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+    .legend-sq {
+      width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+    }
+    .legend-ln {
+      width: 18px; height: 2px; border-top: 2px dashed; flex-shrink: 0;
+    }
+
+    /* ── PRODUCT BARS ── */
+    .prod-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .prod-rank {
+      width: 18px; font-size: 10px; color: var(--muted);
+      font-family: 'JetBrains Mono', monospace; text-align: center; flex-shrink: 0;
+    }
+    .prod-name { width: 120px; font-size: 12px; color: var(--muted); flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .prod-bar-wrap {
+      flex: 1; height: 8px; background: rgba(255,255,255,.06);
+      border-radius: 4px; overflow: hidden;
+    }
+    .prod-bar { height: 100%; border-radius: 4px; width: 0; transition: width 1s cubic-bezier(.4,0,.2,1); }
+    .prod-val { font-size: 12px; font-weight: 600; color: var(--text); width: 50px; text-align: right; flex-shrink: 0; }
+
+    /* ── REGION TABLE ── */
+    .reg-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 0; border-bottom: 1px solid var(--border);
+    }
+    .reg-row:last-child { border-bottom: none; }
+    .reg-left { display: flex; align-items: center; gap: 10px; }
+    .reg-flag { font-size: 16px; }
+    .reg-name { font-size: 13px; color: var(--text); }
+    .reg-rev { font-size: 13px; font-weight: 600; color: var(--text); }
+    .reg-chip {
+      font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500;
+    }
+    .chip-up { background: rgba(29,186,138,.12); color: var(--green); border: 1px solid rgba(29,186,138,.25); }
+    .chip-dn { background: rgba(239,76,90,.12); color: var(--red);   border: 1px solid rgba(239,76,90,.25); }
+
+    /* ── PIPELINE ── */
+    .pipeline-bar {
+      display: flex; height: 20px; border-radius: 6px;
+      overflow: hidden; margin-bottom: 10px; gap: 2px;
+    }
+    .pipe-seg {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 600; color: #fff;
+      border-radius: 4px;
+    }
+
+    /* ── INSIGHT ROWS ── */
+    .insight { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+    .insight-icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+    .insight-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .insight-text strong { color: var(--text); font-weight: 600; }
+
+    /* ── STAT ROWS ── */
+    .stat-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { font-size: 12px; color: var(--muted); }
+    .stat-val { font-size: 13px; font-weight: 600; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+
+    /* ── TECH STACK PILLS ── */
+    .tech-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .tech-pill {
+      font-size: 11px; padding: 5px 12px; border-radius: 20px;
+      border: 1px solid var(--border); color: var(--muted);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .tech-pill .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center; padding: 2rem;
+      font-size: 12px; color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <span>📊</span>
+    Sales BI Dashboard
+  </a>
+  <div class="nav-pills">
+    <button class="nav-pill active">Overview</button>
+    <button class="nav-pill">Products</button>
+    <button class="nav-pill">Regions</button>
+  </div>
+  <span class="nav-badge"><span class="dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:5px;animation:pulse 2s infinite"></span>Live</span>
+</nav>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>Sales Data Analysis &amp; Business Intelligence</h1>
+    <div class="header-meta">
+      <span class="meta-chip"><span class="dot"></span>Jan 2024 – Mar 2025</span>
+      <span class="meta-chip">🐍 Python + Pandas</span>
+      <span class="meta-chip">🗄️ SQL</span>
+      <span class="meta-chip">📊 Power BI</span>
+      <span class="meta-chip">📗 MS Excel</span>
+    </div>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <div class="kpi-icon" style="background:rgba(61,126,247,.1)">💰</div>
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value" id="kv1">$0</div>
+      <div class="kpi-delta up" id="kd1">↑ +18.4% YoY vs 2023</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-icon" style="background:rgba(29,186,138,.1)">📈</div>
+      <div class="kpi-label">Profit Margin</div>
+      <div class="kpi-value" id="kv2">0%</div>
+      <div class="kpi-delta up">↑ +3.2pp vs prior year</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-icon" style="background:rgba(139,124,248,.1)">🚀</div>
+      <div class="kpi-label">Monthly Growth</div>
+      <div class="kpi-value" id="kv3">0%</div>
+      <div class="kpi-delta up">↑ Avg 3-month rolling</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-icon" style="background:rgba(245,166,35,.1)">👥</div>
+      <div class="kpi-label">Active Customers</div>
+      <div class="kpi-value" id="kv4">0</div>
+      <div class="kpi-delta up">↑ +1,240 new acquisitions</div>
+    </div>
+  </div>
+
+  <!-- ROW 1: Trend + Region donut -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Revenue &amp; Profit Trend</div>
+          <div class="card-sub">Monthly performance Jan 2024 – Dec 2024</div>
+        </div>
+        <span class="card-tag">Power BI replica</span>
+      </div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-sq" style="background:var(--accent)"></span>Revenue ($M)</span>
+        <span class="legend-item"><span class="legend-ln" style="border-color:var(--green)"></span>Profit ($M)</span>
+      </div>
+      <div style="position:relative;width:100%;height:260px">
+        <canvas id="trendChart" role="img" aria-label="Monthly revenue and profit trend chart 2024">Revenue and profit data for 2024.</canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Revenue by Region</div>
+          <div class="card-sub">Contribution breakdown</div>
+        </div>
+      </div>
+      <div style="position:relative;width:100%;height:200px;margin-bottom:16px">
+        <canvas id="regionChart" role="img" aria-label="Donut chart showing regional revenue split">Regional revenue split.</canvas>
+      </div>
+      <div class="reg-row">
+        <div class="reg-left"><span class="reg-flag">🌎</span><span class="reg-name">North America</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span class="reg-rev">$5.7M</span><span class="reg-chip chip-up">+21%</span></div>
+      </div>
+      <div class="reg-row">
+        <div class="reg-left"><span class="reg-flag">🌍</span><span class="reg-name">Europe</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span class="reg-rev">$4.0M</span><span class="reg-chip chip-up">+14%</span></div>
+      </div>
+      <div class="reg-row">
+        <div class="reg-left"><span class="reg-flag">🌏</span><span class="reg-name">Asia-Pacific</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span class="reg-rev">$3.3M</span><span class="reg-chip chip-up">+31%</span></div>
+      </div>
+      <div class="reg-row">
+        <div class="reg-left"><span class="reg-flag">🌐</span><span class="reg-name">Others</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span class="reg-rev">$1.9M</span><span class="reg-chip chip-dn">−4%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 2: Products + Pipeline + Stats -->
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Top Products by Revenue</div>
+          <div class="card-sub">Ranked by total contribution</div>
+        </div>
+        <span class="card-tag">SQL query</span>
+      </div>
+      <div id="prodBars"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Data Quality Pipeline</div>
+          <div class="card-sub">Post-cleaning metrics</div>
+        </div>
+        <span class="card-tag">Pandas</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Completeness after transformation</div>
+      <div class="pipeline-bar">
+        <div class="pipe-seg" style="flex:91;background:var(--green)">91%</div>
+        <div class="pipe-seg" style="flex:6;background:var(--red)">6%</div>
+        <div class="pipe-seg" style="flex:3;background:#555">3%</div>
+      </div>
+      <div class="legend" style="margin-bottom:16px">
+        <span class="legend-item"><span class="legend-sq" style="background:var(--green)"></span>Clean (91%)</span>
+        <span class="legend-item"><span class="legend-sq" style="background:var(--red)"></span>Flagged (6%)</span>
+        <span class="legend-item"><span class="legend-sq" style="background:#555"></span>Dropped (3%)</span>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:14px">
+        <div class="insight">
+          <div class="insight-icon" style="background:rgba(29,186,138,.12)">✓</div>
+          <div class="insight-text"><strong>3,412 duplicates removed</strong> across 5 source tables using SQL window functions + CTEs</div>
+        </div>
+        <div class="insight">
+          <div class="insight-icon" style="background:rgba(61,126,247,.12)">↻</div>
+          <div class="insight-text"><strong>1,180 nulls imputed</strong> via median strategy and forward-fill (Pandas)</div>
+        </div>
+        <div class="insight">
+          <div class="insight-icon" style="background:rgba(245,166,35,.12)">!</div>
+          <div class="insight-text"><strong>127 outliers capped</strong> using IQR method on revenue &amp; quantity columns</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Dataset Summary</div>
+          <div class="card-sub">Raw pipeline statistics</div>
+        </div>
+      </div>
+      <div class="stat-row"><span class="stat-label">Total Rows Processed</span><span class="stat-val">142,830</span></div>
+      <div class="stat-row"><span class="stat-label">Date Range</span><span class="stat-val">15 months</span></div>
+      <div class="stat-row"><span class="stat-label">Unique SKUs</span><span class="stat-val">2,840</span></div>
+      <div class="stat-row"><span class="stat-label">Data Sources</span><span class="stat-val">5 tables</span></div>
+      <div class="stat-row"><span class="stat-label">Avg Order Value</span><span class="stat-val">$1,804</span></div>
+      <div class="stat-row"><span class="stat-label">Repeat Purchase Rate</span><span class="stat-val">63.2%</span></div>
+      <div class="stat-row"><span class="stat-label">Customer Churn Rate</span><span class="stat-val">8.7%</span></div>
+      <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Tech Stack</div>
+        <div class="tech-grid">
+          <span class="tech-pill"><span class="dot" style="background:#3572A5"></span>Python</span>
+          <span class="tech-pill"><span class="dot" style="background:#e97f22"></span>SQL</span>
+          <span class="tech-pill"><span class="dot" style="background:#F2C811"></span>Power BI</span>
+          <span class="tech-pill"><span class="dot" style="background:#1D7140"></span>Excel</span>
+          <span class="tech-pill"><span class="dot" style="background:#fff"></span>Pandas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 3: Revenue vs Target + Customer Behavior -->
+  <div class="grid-2b">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Monthly Revenue vs Target — 2024</div>
+          <div class="card-sub">Q4 overperformed by avg. 23%</div>
+        </div>
+        <span class="card-tag">KPI monitoring</span>
+      </div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-sq" style="background:var(--accent)"></span>Actual revenue</span>
+        <span class="legend-item"><span class="legend-ln" style="border-color:var(--pink)"></span>Target</span>
+      </div>
+      <div style="position:relative;width:100%;height:220px">
+        <canvas id="targetChart" role="img" aria-label="Bar and line chart comparing actual vs target revenue 2024">Monthly actual vs target comparison for 2024.</canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Customer Purchase Behavior</div>
+          <div class="card-sub">Segment analysis</div>
+        </div>
+        <span class="card-tag">Pandas groupby</span>
+      </div>
+      <div style="position:relative;width:100%;height:200px;margin-bottom:8px">
+        <canvas id="behaviorChart" role="img" aria-label="Radar chart showing purchase behavior across customer segments">Customer behavior radar chart.</canvas>
+      </div>
+      <div class="legend" style="justify-content:center">
+        <span class="legend-item"><span class="legend-sq" style="background:var(--accent)"></span>Enterprise</span>
+        <span class="legend-item"><span class="legend-sq" style="background:var(--purple)"></span>SMB</span>
+        <span class="legend-item"><span class="legend-sq" style="background:var(--green)"></span>Startup</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  Built with Python · SQL · Power BI · MS Excel &nbsp;|&nbsp;
+  <a href="https://github.com">View Source on GitHub</a> &nbsp;|&nbsp;
+  Data Analytics Project 2024–2025
+</footer>
+
+<script>
+  /* ── DATA ── */
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const revenue = [1.12,1.08,1.24,1.18,1.31,1.27,1.45,1.52,1.61,1.89,2.14,1.97];
+  const profit  = [0.27,0.24,0.31,0.29,0.34,0.33,0.39,0.42,0.44,0.54,0.63,0.57];
+  const target  = [1.10,1.15,1.20,1.25,1.30,1.35,1.38,1.42,1.50,1.60,1.70,1.75];
+
+  const products = [
+    {name:'Enterprise Suite', val:2.34, pct:100, color:'#3d7ef7'},
+    {name:'Analytics Pro',    val:1.87, pct:80,  color:'#1dba8a'},
+    {name:'Cloud Storage',    val:1.54, pct:66,  color:'#8b7cf8'},
+    {name:'Dev Toolkit',      val:1.21, pct:52,  color:'#f5a623'},
+    {name:'Support Plus',     val:0.94, pct:40,  color:'#d4537e'},
+    {name:'Starter Pack',     val:0.68, pct:29,  color:'#7b8299'},
+  ];
+
+  /* ── RENDER PRODUCT BARS ── */
+  const pb = document.getElementById('prodBars');
+  products.forEach((p, i) => {
+    pb.innerHTML += `
+      <div class="prod-row">
+        <div class="prod-rank">${i+1}</div>
+        <div class="prod-name" title="${p.name}">${p.name}</div>
+        <div class="prod-bar-wrap">
+          <div class="prod-bar" style="background:${p.color}" data-pct="${p.pct}"></div>
+        </div>
+        <div class="prod-val">$${p.val.toFixed(2)}M</div>
+      </div>`;
+  });
+
+  /* ── CHART DEFAULTS ── */
+  Chart.defaults.color = '#7b8299';
+  Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+
+  /* ── TREND CHART ── */
+  new Chart(document.getElementById('trendChart'), {
+    data: {
+      labels: months,
+      datasets: [
+        {
+          type: 'bar', label: 'Revenue', data: revenue,
+          backgroundColor: 'rgba(61,126,247,0.7)',
+          borderRadius: 5, borderSkipped: false
+        },
+        {
+          type: 'line', label: 'Profit', data: profit,
+          borderColor: '#1dba8a', borderWidth: 2.5,
+          borderDash: [6,3], tension: 0.4, fill: false,
+          pointRadius: 3, pointBackgroundColor: '#1dba8a',
+          pointStyle: 'circle'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` $${c.parsed.y.toFixed(2)}M` } }
+      },
+      scales: {
+        x: { ticks: { font: { size: 11 }, autoSkip: false, maxRotation: 0 }, grid: { display: false } },
+        y: { ticks: { font: { size: 11 }, callback: v => `$${v}M` }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+
+  /* ── REGION DONUT ── */
+  new Chart(document.getElementById('regionChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['North America','Europe','Asia-Pacific','Others'],
+      datasets: [{
+        data: [38,27,22,13],
+        backgroundColor: ['#3d7ef7','#1dba8a','#8b7cf8','#7b8299'],
+        borderWidth: 2, borderColor: '#1e2235'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '65%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed}%` } }
+      }
+    }
+  });
+
+  /* ── TARGET VS ACTUAL CHART ── */
+  new Chart(document.getElementById('targetChart'), {
+    data: {
+      labels: months,
+      datasets: [
+        {
+          type: 'bar', label: 'Actual', data: revenue,
+          backgroundColor: revenue.map((v, i) => v >= target[i] ? 'rgba(29,186,138,0.7)' : 'rgba(61,126,247,0.7)'),
+          borderRadius: 5, borderSkipped: false
+        },
+        {
+          type: 'line', label: 'Target', data: target,
+          borderColor: '#d4537e', borderWidth: 2,
+          borderDash: [5,3], tension: 0.3, fill: false,
+          pointRadius: 3, pointBackgroundColor: '#d4537e', pointStyle: 'circle'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` $${c.parsed.y.toFixed(2)}M` } }
+      },
+      scales: {
+        x: { ticks: { font: { size: 11 }, autoSkip: false, maxRotation: 0 }, grid: { display: false } },
+        y: { ticks: { font: { size: 11 }, callback: v => `$${v}M` }, min: 0.8, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+
+  /* ── RADAR CHART ── */
+  const radarLabels = ['Avg Order Value','Purchase Frequency','Retention Rate','Cross-sell Rate','Support Tickets'];
+  new Chart(document.getElementById('behaviorChart'), {
+    type: 'radar',
+    data: {
+      labels: radarLabels,
+      datasets: [
+        { label:'Enterprise', data:[90,60,88,70,30], borderColor:'#3d7ef7', backgroundColor:'rgba(61,126,247,0.12)', borderWidth:2, pointRadius:3 },
+        { label:'SMB',        data:[55,80,72,55,55], borderColor:'#8b7cf8', backgroundColor:'rgba(139,124,248,0.12)', borderWidth:2, pointRadius:3 },
+        { label:'Startup',    data:[30,95,58,45,70], borderColor:'#1dba8a', backgroundColor:'rgba(29,186,138,0.12)',  borderWidth:2, pointRadius:3 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { display: false },
+          grid: { color: 'rgba(255,255,255,0.07)' },
+          angleLines: { color: 'rgba(255,255,255,0.07)' },
+          pointLabels: { font: { size: 10 }, color: '#7b8299' }
+        }
+      }
+    }
+  });
+
+  /* ── KPI COUNTER ANIMATION ── */
+  function animateKPI(id, end, prefix, suffix, dec) {
+    const el = document.getElementById(id);
+    const steps = 50; let i = 0;
+    const iv = setInterval(() => {
+      i++;
+      const v = end * (i / steps);
+      el.textContent = prefix + (dec ? v.toFixed(dec) : Math.round(v).toLocaleString()) + suffix;
+      if (i >= steps) { el.textContent = prefix + (dec ? end.toFixed(dec) : end.toLocaleString()) + suffix; clearInterval(iv); }
+    }, 28);
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      animateKPI('kv1', 14.9, '$', 'M', 1);
+      animateKPI('kv2', 31.4, '', '%', 1);
+      animateKPI('kv3', 6.7,  '', '%', 1);
+      animateKPI('kv4', 8240, '', '', 0);
+    }, 300);
+    setTimeout(() => {
+      document.querySelectorAll('.prod-bar').forEach(b => {
+        b.style.width = b.dataset.pct + '%';
+      });
+    }, 600);
+  });
+</script>
+</body>
+</html>
