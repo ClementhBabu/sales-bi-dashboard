@@ -36,39 +36,6 @@ A full-cycle data analytics project analyzing **15 months of sales data** (Jan 2
 
 ---
 
-## 🗂️ Repository Structure
-
-```
-sales-bi-dashboard/
-│
-├── 📂 data/
-│   ├── raw/                    # Original source CSVs (gitignored)
-│   └── processed/              # Cleaned datasets output by pipeline
-│
-├── 📂 notebooks/
-│   ├── 01_data_cleaning.ipynb        # ETL + transformation pipeline
-│   ├── 02_exploratory_analysis.ipynb # EDA, distributions, correlations
-│   ├── 03_revenue_trends.ipynb       # Time-series analysis
-│   └── 04_customer_behavior.ipynb    # Segmentation & cohort analysis
-│
-├── 📂 sql/
-│   ├── create_tables.sql       # Schema definition
-│   ├── revenue_by_region.sql   # Regional aggregations
-│   ├── top_products.sql        # Product ranking queries
-│   └── monthly_kpis.sql        # KPI calculation queries
-│
-├── 📂 dashboard/
-│   └── index.html              # Interactive BI dashboard (this file!)
-│
-├── 📂 reports/
-│   └── sales_analysis_2024.pdf # Executive summary report
-│
-├── requirements.txt
-└── README.md
-```
-
----
-
 ## 🔧 Technical Approach
 
 ### 1. Data Ingestion & Cleaning (Python / Pandas)
